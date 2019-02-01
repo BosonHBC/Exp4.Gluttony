@@ -23,7 +23,10 @@ public class BodyController : MonoBehaviour
     void PerformSpeed()
     {
         float hori = Input.GetAxis("Horizontal");
+        float vert = Input.GetAxis("Vertical");
 
-        rb.AddForce(transform.right * hori * fMoveSpeed, ForceMode.Force);
+        Vector3 dir = (transform.parent.right * hori + transform.parent.forward * vert).normalized;
+
+        rb.AddForce(dir * fMoveSpeed, ForceMode.Force);
     }
 }
