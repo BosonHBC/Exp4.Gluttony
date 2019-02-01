@@ -31,16 +31,13 @@ public class HeadLookAt : MonoBehaviour
         if (Input.GetMouseButton(0))
         {
             rb.AddForce(-transform.forward * fSplitForce, mode);
-            if (!particle.isPlaying)
-            {
-                particle.Play();
-            }
-                
+            particle.Emit(1);
+
         }
-        else
+        if (Input.GetMouseButtonUp(0))
         {
-            if (particle.isPlaying)
-                particle.Stop();
+
+
         }
     }
 }
