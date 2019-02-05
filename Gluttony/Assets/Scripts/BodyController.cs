@@ -5,21 +5,34 @@ using UnityEngine;
 public class BodyController : MonoBehaviour
 {
 
+
+
     private Rigidbody rb;
     [SerializeField]
     private float fMoveSpeed;
 
     [SerializeField]
-     private GameObject neckPrefab;
+    private GameObject neckPrefab;
     private Transform head;
 
     List<Transform> necks = new List<Transform>();
     private float fAnchorValue = 0.53f;
     private float fNeckHeight = 0.8637f;
+
+    private bool bConsuming;
+    [SerializeField]
+    private float fConsumeTime = 1f;
+    private float collpaseTime;
+
+    ParticleSystem poop;
+    [SerializeField]
+    float fReduceSpeed;
+
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        poop = transform.GetChild(0).GetComponent<ParticleSystem>();
         head = transform.parent.GetChild(2);
         necks.Add(transform.parent.GetChild(1));
         Debug.Log(necks.Count);
@@ -33,18 +46,37 @@ public class BodyController : MonoBehaviour
         {
             NewNeck();
         }
+
+        if (bConsuming)
+        {
+            collpaseTime += Time.deltaTime;
+            IncreaseHeight();
+            if(collpaseTime > fConsumeTime)
+            {
+                bConsuming = false;
+                collpaseTime = 0;
+            }
+        }
+
         if (Input.GetKey(KeyCode.Alpha2))
         {
-            DebugAdjustHeight(1);
+            IncreaseHeight();
         }
         if (Input.GetKey(KeyCode.Alpha3))
         {
-            DebugAdjustHeight(-1);
+            //IncreaseHeight(-1);
         }
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             CleanLastNeck();
         }
+
+        if (Vector3.Angle(transform.up, Vector3.up) > 75f)
+        {
+            poop.Emit(1);
+            ReduceHeight();
+        }
+           
     }
 
     void PerformSpeed()
@@ -61,9 +93,9 @@ public class BodyController : MonoBehaviour
         GameObject go = Instantiate(neckPrefab);
         go.transform.parent = transform.parent;
         go.transform.localScale = new Vector3(1, 0.001f, 1);
-       
+
         Transform lastNeck = necks[necks.Count - 1];
-        go.transform.SetSiblingIndex(lastNeck.GetSiblingIndex()+1);
+        go.transform.SetSiblingIndex(lastNeck.GetSiblingIndex() + 1);
         go.name = "Neck_" + necks.Count;
         head.localPosition += head.up * 0.01f;
         go.transform.position = lastNeck.position + lastNeck.up;
@@ -79,19 +111,42 @@ public class BodyController : MonoBehaviour
 
         sj_New.connectedBody = head.GetComponent<Rigidbody>();
         sj_New.autoConfigureConnectedAnchor = true;
-       // lastNeck.GetComponent<SpringJoint>().anchor = new Vector3(0, 0.86f, 0);
+        // lastNeck.GetComponent<SpringJoint>().anchor = new Vector3(0, 0.86f, 0);
         necks.Add(go.transform);
 
         Debug.Log(necks.Count);
     }
 
-    void DebugAdjustHeight(int _i)
+    void IncreaseHeight()
     {
-        necks[necks.Count - 1].localScale += new Vector3(0, _i*Time.deltaTime,0);
-        if(necks[necks.Count - 1].localScale.y > fNeckHeight)
-            necks[necks.Count - 1].localScale = new Vector3(0, fNeckHeight, 0);
-        if (necks[necks.Count - 1].localScale.y < 0.01f)
-            necks[necks.Count - 1].localScale = new Vector3(0, 0.01f, 0);
+        if (necks[necks.Count - 1].localScale.y <= fNeckHeight)
+        {
+            necks[necks.Count - 1].localScale += new Vector3(0, Time.deltaTime, 0);
+            Debug.Log("Adding");
+        }
+        else
+        {
+            NewNeck();
+            return;
+        }
+
+        //if (necks[necks.Count - 1].localScale.y > fNeckHeight)
+        //    necks[necks.Count - 1].localScale = new Vector3(1, fNeckHeight, 1);
+        //else if (necks[necks.Count - 1].localScale.y < 0.01f)
+        //    necks[necks.Count - 1].localScale = new Vector3(1, 0.01f, 1);
+    }
+    void ReduceHeight()
+    {
+        if (necks[necks.Count - 1].localScale.y >= 0.01f)
+        {
+            necks[necks.Count - 1].localScale -= new Vector3(0, fReduceSpeed*Time.deltaTime, 0);
+            Debug.Log("Reducing");
+        }
+        else
+        {
+            CleanLastNeck();
+            return;
+        }
     }
 
     public void CleanLastNeck()
@@ -107,5 +162,14 @@ public class BodyController : MonoBehaviour
         sj_Last.connectedBody = head.GetComponent<Rigidbody>();
         sj_Last.autoConfigureConnectedAnchor = true;
         Destroy(_neck);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Food"))
+        {
+            bConsuming = true;
+           
+        }
     }
 }
