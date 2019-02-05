@@ -11,6 +11,8 @@ public class HeadLookAt : MonoBehaviour
     private Rigidbody rb;
 
     private ParticleSystem particle;
+    [SerializeField]
+    BodyController bCtrl;
 
     // Start is called before the first frame update
     void Start()
@@ -20,7 +22,7 @@ public class HeadLookAt : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         transform.LookAt(CameraController.instance.worldPoint);
         PerformSplit();
@@ -32,12 +34,9 @@ public class HeadLookAt : MonoBehaviour
         {
             rb.AddForce(-transform.forward * fSplitForce, mode);
             particle.Emit(1);
-
+            bCtrl.ReduceHeight();
+            bCtrl.IncreaseVom();
         }
-        if (Input.GetMouseButtonUp(0))
-        {
 
-
-        }
     }
 }
