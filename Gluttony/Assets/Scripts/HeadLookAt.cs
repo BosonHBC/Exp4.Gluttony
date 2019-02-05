@@ -24,8 +24,12 @@ public class HeadLookAt : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        transform.LookAt(CameraController.instance.worldPoint);
-        PerformSplit();
+        if (!GameManager.instance.bGameOver)
+        {
+            transform.LookAt(CameraController.instance.worldPoint);
+            PerformSplit();
+        }
+     
     }
 
     void PerformSplit()
